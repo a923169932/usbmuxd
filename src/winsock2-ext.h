@@ -8,5 +8,10 @@
 #define POLLOUT (POLLWRNORM)
 
 /* Mapping of BSD names to Windows names */
+
+#ifdef EWOULDBLOCK
+#undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+
 #define sockaddr_un sockaddr_in

@@ -329,7 +329,12 @@ int plist_write_to_filename(plist_t plist, const char *filename, enum plist_form
 
 	int res  = buffer_write_to_filename(filename, buffer, length);
 
-	free(buffer);
+	if (format == PLIST_FORMAT_XML)
+		plist_to_xml_free(buffer);
+	else if (format == PLIST_FORMAT_BINARY)
+		plist_to_bin_free(buffer);
+	else
+		NULL;
 
 	return res;
 }

@@ -359,7 +359,7 @@ static int send_plist_pkt(struct mux_client *client, uint32_t tag, plist_t plist
 	plist_to_xml(plist, &xml, &xmlsize);
 	if (xml) {
 		res = send_pkt(client, tag, MESSAGE_PLIST, xml, xmlsize);
-		free(xml);
+		plist_to_xml_free(xml);
 	} else {
 		usbmuxd_log(LL_ERROR, "%s: Could not convert plist to xml", __func__);
 	}
@@ -480,7 +480,7 @@ static int send_listener_list(struct mux_client *client, uint32_t tag)
 				plist_get_string_val(n, &progname);
 			}
 			if (!progname) {
-				progname = strdup("unknown");
+				progname = _strdup("unknown");
 			}
 			char *idstring = malloc(strlen(progname) + 12);
 			sprintf(idstring, "%u-%s", client->number, progname);

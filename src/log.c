@@ -79,6 +79,28 @@ static int level_to_syslog_level(int level)
 }
 #endif
 
+static void bmuxd_log_level_to_string(enum loglevel level, char* szLevel, size_t SizeInBytes)
+{
+	if (level >= LL_ENUM_MAX || level < LL_FATAL)
+	{
+		return;
+	}
+	if (!szLevel || 0 == SizeInBytes)
+	{
+		return;
+	}
+	static const char* szLevelTable[LL_ENUM_MAX];
+	szLevelTable[LL_FATAL]		= "fatal";
+	szLevelTable[LL_ERROR]		= "error";
+	szLevelTable[LL_WARNING]	= "warning";
+	szLevelTable[LL_NOTICE]		= "notice";
+	szLevelTable[LL_INFO]		= "info";
+	szLevelTable[LL_DEBUG]		= "debug";
+	szLevelTable[LL_SPEW]		= "spew";
+	szLevelTable[LL_FLOOD]		= "flood";
+	strcpy_s(szLevel, SizeInBytes, szLevelTable[level]);
+}
+
 void usbmuxd_log(enum loglevel level, const char *fmt, ...)
 {
 	va_list ap;
@@ -87,7 +109,7 @@ void usbmuxd_log(enum loglevel level, const char *fmt, ...)
 	if(level > log_level)
 		return;
 
-	fs = malloc(20 + strlen(fmt));
+	fs = malloc(128 + strlen(fmt));
 	if (!fs)
 	{
 		return;
@@ -98,9 +120,13 @@ void usbmuxd_log(enum loglevel level, const char *fmt, ...)
 	time_t ltime;
 	time(&ltime);
 	tp = localtime(&ltime);
+	char szLevel[10];
+	bmuxd_log_level_to_string(level, szLevel, sizeof(szLevel));
 
 	strftime(fs, 10, "[%H:%M:%S", tp);
-	sprintf(fs + 9, "[%d] %s\n", level, fmt);
+	sprintf(fs + 9, "[%d][%s] %s\n", level, szLevel, fmt);
+
+
 #else
 	if(log_syslog) {
 		sprintf(fs, "[%d] %s\n", level, fmt);

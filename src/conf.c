@@ -156,7 +156,7 @@ const char *config_get_config_dir()
 static int __mkdir(const char *dir, int mode)
 {
 #ifdef WIN32
-	return mkdir(dir);
+	return _mkdir(dir);
 #else
 	return mkdir(dir, mode);
 #endif
@@ -171,7 +171,7 @@ static int mkdir_with_parents(const char *dir, int mode)
 		if (errno == EEXIST) return 0;
 	}
 	int res;
-	char *parent = strdup(dir);
+	char *parent = _strdup(dir);
 	char* parentdir = dirname(parent);
 	if (parentdir) {
 		res = mkdir_with_parents(parentdir, mode);
@@ -415,9 +415,9 @@ int config_set_device_record(const char *udid, char* record_data, uint64_t recor
 
 	plist_t plist = NULL;
 	if (memcmp(record_data, "bplist00", 8) == 0) {
-		plist_from_bin(record_data, record_size, &plist);
+		plist_from_bin(record_data, (uint32_t)record_size, &plist);
 	} else {
-		plist_from_xml(record_data, record_size, &plist);
+		plist_from_xml(record_data, (uint32_t)record_size, &plist);
 	}
 
 	if (!plist || plist_get_node_type(plist) != PLIST_DICT) {

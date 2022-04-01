@@ -148,7 +148,12 @@ static void* preflight_worker_handle_device_add(void* userdata)
 {
 	struct device_info *info = (struct device_info*)userdata;
 	struct idevice_private *_dev = (struct idevice_private*)malloc(sizeof(struct idevice_private));
-	_dev->udid = strdup(info->serial);
+	if (!_dev)
+	{
+		usbmuxd_log(LL_FATAL, "%s: malloc fail.", __func__);
+		return NULL;
+	}
+	_dev->udid = _strdup(info->serial);
 	_dev->mux_id = info->id;
 	_dev->conn_type = CONNECTION_USBMUXD;
 	_dev->conn_data = NULL;
@@ -382,10 +387,9 @@ void preflight_worker_device_add(struct device_info* info)
 
 #ifdef HAVE_LIBIMOBILEDEVICE
 	struct device_info *infocopy = (struct device_info*)malloc(sizeof(struct device_info));
-
 	memcpy(infocopy, info, sizeof(struct device_info));
 	if (info->serial) {
-		infocopy->serial = strdup(info->serial);
+		infocopy->serial = _strdup(info->serial);
 	}
 
 	pthread_t th;

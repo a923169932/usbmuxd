@@ -2,7 +2,7 @@
 
 char *dirname(char const *file)
 {
-	char* dir[256];
+	static char dir[260];
 	_splitpath(file, 0, dir, 0, 0);
 	return dir;
 }

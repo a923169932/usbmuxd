@@ -30,6 +30,8 @@ enum loglevel {
 	LL_DEBUG,
 	LL_SPEW,
 	LL_FLOOD,
+
+	LL_ENUM_MAX,
 };
 
 extern unsigned int log_level;
