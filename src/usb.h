@@ -48,23 +48,23 @@
 #define PID_RANGE_MAX 0x12af
 #define PID_APPLE_T2_COPROCESSOR 0x8600
 
-struct usb_device;
+struct m_usb_device;
 
 void usb_set_log_level(int level);
 int usb_get_log_level(void);
 int usb_initialize(void);
 void usb_shutdown(void);
-const char *usb_get_serial(struct usb_device *dev);
-uint32_t usb_get_location(struct usb_device *dev);
-uint16_t usb_get_pid(struct usb_device *dev);
-uint64_t usb_get_speed(struct usb_device *dev);
+const char *usb_get_serial(struct m_usb_device *dev);
+uint32_t usb_get_location(struct m_usb_device *dev);
+uint16_t usb_get_pid(struct m_usb_device *dev);
+uint64_t usb_get_speed(struct m_usb_device *dev);
 
 #ifndef WIN32
 void usb_get_fds(struct fdlist *list);
 #endif
 
 int usb_get_timeout(void);
-int usb_send(struct usb_device *dev, const unsigned char *buf, int length);
+int usb_send(struct m_usb_device *dev, const unsigned char *buf, int length);
 int usb_discover(void);
 void usb_autodiscover(int enable);
 int usb_process(void);

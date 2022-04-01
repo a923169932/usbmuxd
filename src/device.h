@@ -31,10 +31,10 @@ struct device_info {
 	uint64_t speed;
 };
 
-void device_data_input(struct usb_device *dev, unsigned char *buf, uint32_t length);
+void device_data_input(struct m_usb_device *dev, unsigned char *buf, uint32_t length);
 
-int device_add(struct usb_device *dev);
-void device_remove(struct usb_device *dev);
+int device_add(struct m_usb_device *dev);
+void device_remove(struct m_usb_device *dev);
 
 int device_start_connect(int device_id, uint16_t port, struct mux_client *client);
 void device_client_process(int device_id, struct mux_client *client, short events);

@@ -70,7 +70,7 @@ const char* libusb_strerror(int errcode)
 
 int libusb_verbose = 0;
 
-struct usb_device {
+struct m_usb_device {
 	libusb_device_handle *dev;
 	uint8_t bus, address;
 	char serial[256];
@@ -101,7 +101,7 @@ int usb_get_log_level(void)
 	return libusb_verbose;
 }
 
-static void usb_disconnect(struct usb_device *dev)
+static void usb_disconnect(struct m_usb_device *dev)
 {
 	if(!dev->dev) {
 		return;
@@ -142,7 +142,7 @@ static void usb_disconnect(struct usb_device *dev)
 }
 
 static void reap_dead_devices(void) {
-	FOREACH(struct usb_device *usbdev, &device_list) {
+	FOREACH(struct m_usb_device *usbdev, &device_list) {
 		if(!usbdev->alive) {
 			device_remove(usbdev);
 			usb_disconnect(usbdev);
@@ -153,7 +153,7 @@ static void reap_dead_devices(void) {
 // Callback from write operation
 static void LIBUSB_CALL tx_callback(struct libusb_transfer *xfer)
 {
-	struct usb_device *dev = xfer->user_data;
+	struct m_usb_device *dev = xfer->user_data;
 	usbmuxd_log(LL_SPEW, "TX callback dev %d-%d len %d -> %d status %d", dev->bus, dev->address, xfer->length, xfer->actual_length, xfer->status);
 	if(xfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		switch(xfer->status) {
@@ -193,7 +193,7 @@ static void LIBUSB_CALL tx_callback(struct libusb_transfer *xfer)
 	libusb_free_transfer(xfer);
 }
 
-int usb_send(struct usb_device *dev, const unsigned char *buf, int length)
+int usb_send(struct m_usb_device *dev, const unsigned char *buf, int length)
 {
 	int res;
 	struct libusb_transfer *xfer = libusb_alloc_transfer(0);
@@ -225,7 +225,7 @@ int usb_send(struct usb_device *dev, const unsigned char *buf, int length)
 // doing a kind of read-callback loop
 static void LIBUSB_CALL rx_callback(struct libusb_transfer *xfer)
 {
-	struct usb_device *dev = xfer->user_data;
+	struct m_usb_device *dev = xfer->user_data;
 	usbmuxd_log(LL_SPEW, "RX callback dev %d-%d len %d status %d", dev->bus, dev->address, xfer->actual_length, xfer->status);
 	if(xfer->status == LIBUSB_TRANSFER_COMPLETED) {
 		device_data_input(dev, xfer->buffer, xfer->actual_length);
@@ -270,7 +270,7 @@ static void LIBUSB_CALL rx_callback(struct libusb_transfer *xfer)
 }
 
 // Start a read-callback loop for this device
-static int start_rx_loop(struct usb_device *dev)
+static int start_rx_loop(struct m_usb_device *dev)
 {
 	int res;
 	void *buf;
@@ -291,7 +291,7 @@ static int start_rx_loop(struct usb_device *dev)
 static void LIBUSB_CALL get_serial_callback(struct libusb_transfer *transfer)
 {
 	unsigned int di, si;
-	struct usb_device *usbdev = transfer->user_data;
+	struct m_usb_device *usbdev = transfer->user_data;
 
 	if(transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		usbmuxd_log(LL_ERROR, "Failed to request serial for device %d-%d (%i)", usbdev->bus, usbdev->address, transfer->status);
@@ -358,7 +358,7 @@ static void LIBUSB_CALL get_serial_callback(struct libusb_transfer *transfer)
 static void LIBUSB_CALL get_langid_callback(struct libusb_transfer *transfer)
 {
 	int res;
-	struct usb_device *usbdev = transfer->user_data;
+	struct m_usb_device *usbdev = transfer->user_data;
 
 	transfer->flags |= LIBUSB_TRANSFER_FREE_BUFFER;
 
@@ -394,7 +394,7 @@ static int usb_device_add(libusb_device* dev)
 	struct libusb_device_descriptor devdesc;
 	struct libusb_transfer *transfer;
 	int found = 0;
-	FOREACH(struct usb_device *usbdev, &device_list) {
+	FOREACH(struct m_usb_device *usbdev, &device_list) {
 		if(usbdev->bus == bus && usbdev->address == address) {
 			usbdev->alive = 1;
 			found = 1;
@@ -492,8 +492,8 @@ static int usb_device_add(libusb_device* dev)
 		return -1;
 	}
 
-	struct usb_device *usbdev;
-	usbdev = malloc(sizeof(struct usb_device));
+	struct m_usb_device *usbdev;
+	usbdev = malloc(sizeof(struct m_usb_device));
 	memset(usbdev, 0, sizeof(*usbdev));
 
 	for(j=0; j<config->bNumInterfaces; j++) {
@@ -647,7 +647,7 @@ int usb_discover(void)
 
 	// Mark all devices as dead, and do a mark-sweep like
 	// collection of dead devices
-	FOREACH(struct usb_device *usbdev, &device_list) {
+	FOREACH(struct m_usb_device *usbdev, &device_list) {
 		usbdev->alive = 0;
 	} ENDFOREACH
 
@@ -674,7 +674,7 @@ int usb_discover(void)
 	return valid_count;
 }
 
-const char *usb_get_serial(struct usb_device *dev)
+const char *usb_get_serial(struct m_usb_device *dev)
 {
 	if(!dev->dev) {
 		return NULL;
@@ -682,7 +682,7 @@ const char *usb_get_serial(struct usb_device *dev)
 	return dev->serial;
 }
 
-uint32_t usb_get_location(struct usb_device *dev)
+uint32_t usb_get_location(struct m_usb_device *dev)
 {
 	if(!dev->dev) {
 		return 0;
@@ -690,7 +690,7 @@ uint32_t usb_get_location(struct usb_device *dev)
 	return (dev->bus << 16) | dev->address;
 }
 
-uint16_t usb_get_pid(struct usb_device *dev)
+uint16_t usb_get_pid(struct m_usb_device *dev)
 {
 	if(!dev->dev) {
 		return 0;
@@ -698,7 +698,7 @@ uint16_t usb_get_pid(struct usb_device *dev)
 	return dev->devdesc.idProduct;
 }
 
-uint64_t usb_get_speed(struct usb_device *dev)
+uint64_t usb_get_speed(struct m_usb_device *dev)
 {
 	if (!dev->dev) {
 		return 0;
@@ -831,7 +831,7 @@ static int LIBUSB_CALL usb_hotplug_cb(libusb_context *ctx, libusb_device *device
 	} else if (LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT == event) {
 		uint8_t bus = libusb_get_bus_number(device);
 		uint8_t address = libusb_get_device_address(device);
-		FOREACH(struct usb_device *usbdev, &device_list) {
+		FOREACH(struct m_usb_device *usbdev, &device_list) {
 			if(usbdev->bus == bus && usbdev->address == address) {
 				usbdev->alive = 0;
 				device_remove(usbdev);
@@ -903,7 +903,7 @@ void usb_shutdown(void)
 	libusb_hotplug_deregister_callback(NULL, usb_hotplug_cb_handle);
 #endif
 
-	FOREACH(struct usb_device *usbdev, &device_list) {
+	FOREACH(struct m_usb_device *usbdev, &device_list) {
 		device_remove(usbdev);
 		usb_disconnect(usbdev);
 	} ENDFOREACH

@@ -126,7 +126,7 @@ struct mux_connection
 
 struct mux_device
 {
-	struct usb_device *usbdev;
+	struct m_usb_device *usbdev;
 	int id;
 	enum mux_dev_state state;
 	int visible;
@@ -741,7 +741,7 @@ static void device_tcp_input(struct mux_device *dev, struct tcphdr *th, unsigned
  * @param buffer
  * @param length
  */
-void device_data_input(struct usb_device *usbdev, unsigned char *buffer, uint32_t length)
+void device_data_input(struct m_usb_device *usbdev, unsigned char *buffer, uint32_t length)
 {
 	struct mux_device *dev = NULL;
 	pthread_mutex_lock(&device_list_mutex);
@@ -842,7 +842,7 @@ void device_data_input(struct usb_device *usbdev, unsigned char *buffer, uint32_
 
 }
 
-int device_add(struct usb_device *usbdev)
+int device_add(struct m_usb_device *usbdev)
 {
 	int res;
 	int id = get_next_device_id();
@@ -874,7 +874,7 @@ int device_add(struct usb_device *usbdev)
 	return 0;
 }
 
-void device_remove(struct usb_device *usbdev)
+void device_remove(struct m_usb_device *usbdev)
 {
 	pthread_mutex_lock(&device_list_mutex);
 	FOREACH(struct mux_device *dev, &device_list) {
