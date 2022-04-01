@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2013 Nikias Bassen <nikias@gmx.li>
  * Copyright (C) 2014 Frederik Carlier <frederik.carlier@quamotion.mobi>
+ * Copyright (C) 2022 JieDong Feng <djiefeng@163.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
