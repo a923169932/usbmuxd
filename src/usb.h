@@ -64,11 +64,9 @@ uint64_t usb_get_speed(struct m_usb_device *dev);
 void usb_get_fds(struct fdlist *list);
 #endif
 
-int usb_get_timeout(void);
 int usb_send(struct m_usb_device *dev, const unsigned char *buf, int length);
 int usb_discover(void);
 void usb_autodiscover(int enable);
 int usb_process(void);
-int usb_process_timeout(int msec);
 
 #endif

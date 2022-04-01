@@ -1034,7 +1034,7 @@ void device_kill_connections(void)
 		}
 	} ENDFOREACH
 	// give USB a while to send the final connection RSTs and the like
-	usb_process_timeout(100);
+	usb_process();
 }
 
 void device_shutdown(void)
