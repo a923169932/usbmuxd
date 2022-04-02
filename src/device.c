@@ -623,6 +623,7 @@ static void device_control_input(struct mux_device *dev, unsigned char *payload,
 				usbmuxd_log(LL_ERROR, "%s: Got device error payload with empty message", __func__);
 			}
 			break;
+		case 4:
 		case 7:
 			if (payload_length > 1) {
 				char* buf = malloc(payload_length);
@@ -631,7 +632,7 @@ static void device_control_input(struct mux_device *dev, unsigned char *payload,
 				usbmuxd_log(LL_INFO, "%s: %s", __func__, buf);
 				free(buf);
 			} else {
-				usbmuxd_log(LL_WARNING, "%s: Got payload type 7 with empty message", __func__);
+				usbmuxd_log(LL_WARNING, "%s: Got payload type %d with empty message", __func__, payload[0]);
 			}
 			break;
 		default:
@@ -692,7 +693,7 @@ static void device_tcp_input(struct mux_device *dev, struct tcphdr *th, unsigned
 		if(payload_length && (buf[payload_length-1] == '\n'))
 			buf[payload_length-1] = 0;
 		buf[payload_length] = 0;
-		usbmuxd_log(LL_DEBUG, "RST reason: %s", buf);
+		usbmuxd_log(LL_DEBUG, "RST reason: [%d][%s]", payload_length, buf + 1);
 		free(buf);
 	}
 
@@ -728,8 +729,10 @@ static void device_tcp_input(struct mux_device *dev, struct tcphdr *th, unsigned
 		} else {
 			connection_device_input(conn, payload, payload_length);
 
+//#ifndef WIN32
 			// Device likes it best when we are prompty ACKing data
 			send_tcp_ack(conn);
+//#endif
 		}
 	}
 }

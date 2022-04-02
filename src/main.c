@@ -92,10 +92,10 @@ int use_logfile = 0;
 int no_preflight = 0;
 
 #if DEBUG || _DEBUG
-static int verbose = 255;
+static int verbose = LL_DEBUG;
 static int libusb_verbose = 255;
 #else
-static int verbose = 0;
+static int verbose = LL_INFO;
 static int libusb_verbose = 0;
 #endif
 
@@ -163,6 +163,7 @@ static socket_handle create_socket(void) {
 #endif
 
 #ifdef WIN32
+#ifdef SOCKET_NONBLOCK
 	u_long iMode = 1;
 
 	usbmuxd_log(LL_INFO, "Setting socket to non-blocking");
@@ -171,6 +172,7 @@ static socket_handle create_socket(void) {
 		usbmuxd_log(LL_FATAL, "ERROR: Could not set socket to non blocking: %d", ret);
 		return -1;
 	}
+#endif // SOCKET_NONBLOCK
 #else
 	int flags = fcntl(listenfd, F_GETFL, 0);
 	if (flags < 0) {
@@ -692,19 +694,6 @@ int main(int argc, char *argv[])
 
 	argc -= optind;
 	argv += optind;
-
-#ifdef WIN32
-	verbose += LL_NOTICE;
-#else
-    if (!foreground && !use_logfile) {
-		verbose += LL_WARNING;
-#ifndef WIN32
-		log_enable_syslog();
-#endif
-	} else {
-		verbose += LL_NOTICE;
-	}
-#endif
 
 	/* set log level to specified verbosity */
 	log_level = verbose;

@@ -152,12 +152,22 @@ int client_write(struct mux_client *client, void *buffer, uint32_t len)
 
 	sret = send(client->fd, buffer, len, 0);
 	if (sret < 0) {
+#ifdef WIN32
+		if (GetLastError() == WSAEWOULDBLOCK) {
+			usbmuxd_log(LL_DEBUG, "client_write: fd %d not ready for writing", client->fd);
+			sret = 0;
+		}
+		else {
+			usbmuxd_log(LL_ERROR, "ERROR: client_write: sending to fd %d failed: %d %d", client->fd, sret, GetLastError());
+		}
+#else
 		if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
 			usbmuxd_log(LL_DEBUG, "client_write: fd %d not ready for writing", client->fd);
 			sret = 0;
 		} else {
-			usbmuxd_log(LL_ERROR, "ERROR: client_write: sending to fd %d failed: %s", client->fd, strerror(errno));
+			usbmuxd_log(LL_ERROR, "ERROR: client_write: sending to fd %d failed: %d %s", client->fd, sret, strerror(errno));
 		}
+#endif
 	}
 	return sret;
 }
@@ -205,8 +215,10 @@ int client_accept(int listenfd)
 	}
 
 #ifdef WIN32
+#ifdef SOCKET_NONBLOCK
 	u_long iMode = 1;
 	ioctlsocket(cfd, FIONBIO, &iMode);
+#endif
 #else
 	int flags = fcntl(cfd, F_GETFL, 0);
 	if (flags < 0) {
@@ -286,7 +298,7 @@ void client_close(struct mux_client *client)
 		}
 	}
 #else
-	usbmuxd_log(LL_INFO, "Client %d is going to be disconnected", client->fd);
+	usbmuxd_log(LL_INFO, "Client %d is going to be disconnected, state[%d]", client->fd, client->state);
 #endif
 	if(client->state == CLIENT_CONNECTING1 || client->state == CLIENT_CONNECTING2) {
 		usbmuxd_log(LL_INFO, "Client died mid-connect, aborting device %d connection", client->connect_device);
@@ -300,11 +312,18 @@ void client_close(struct mux_client *client)
 	close(client->fd);
 #endif
 	plist_free(client->info);
+	client->info = NULL;
 
-	if(client->ob_buf)
+	if (client->ob_buf)
+	{
 		free(client->ob_buf);
-	if(client->ib_buf)
+		client->ob_buf = NULL;
+	}
+	if (client->ib_buf)
+	{
 		free(client->ib_buf);
+		client->ib_buf = NULL;
+	}
 	pthread_mutex_lock(&client_list_mutex);
 	collection_remove(&client_list, client);
 	pthread_mutex_unlock(&client_list_mutex);
@@ -914,8 +933,19 @@ static void process_send(struct mux_client *client)
 		return;
 	}
 	res = send(client->fd, client->ob_buf, client->ob_size, 0);
-	if(res <= 0) {
-		usbmuxd_log(LL_ERROR, "Sending to client fd %d failed: %d %s", client->fd, res, strerror(errno));
+	if(res <= 0) 
+	{
+#ifdef WIN32
+		if (GetLastError() == WSAEWOULDBLOCK) {
+			return;
+		}
+		else {
+			usbmuxd_log(LL_ERROR, "%s Sending to client fd %d failed: %d lasterr %d", __func__, client->fd, res, GetLastError());
+			client_close(client);
+			return;
+		}
+#endif
+		usbmuxd_log(LL_ERROR, "%s Sending to client fd %d failed: %d strerror: %s", __func__, client->fd, res, strerror(errno));
 		client_close(client);
 		return;
 	}
