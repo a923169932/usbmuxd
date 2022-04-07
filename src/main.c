@@ -90,7 +90,7 @@ int use_logfile = 0;
 int no_preflight = 0;
 
 #if DEBUG || _DEBUG
-static int verbose = 255;
+static int verbose = 1;
 static int libusb_verbose = 255;
 #else
 static int verbose = 0;

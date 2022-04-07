@@ -89,14 +89,13 @@ void usbmuxd_log(enum loglevel level, const char *fmt, ...)
 	fs = malloc(20 + strlen(fmt));
 
 #ifdef WIN32
-	struct timeval ts;	
 	struct tm *tp;
 	time_t ltime;
 	time(&ltime);
 	tp = localtime(&ltime);
 
 	strftime(fs, 10, "[%H:%M:%S", tp);
-	sprintf(fs + 9, ".%03d][%d] %s\n", (int)(ts.tv_usec / 1000), level, fmt);
+	sprintf(fs + 9, "[%d] %s\n", level, fmt);
 #else
 	if(log_syslog) {
 		sprintf(fs, "[%d] %s\n", level, fmt);
